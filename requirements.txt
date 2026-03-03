@@ -1,3 +1,6 @@
 telethon
 dotenv
 requests
+asyncio
+qrcode
+config
