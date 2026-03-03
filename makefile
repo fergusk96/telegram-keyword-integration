@@ -35,6 +35,9 @@ install: venv
 run: install
 	$(PYTHON) telegram_keywords.py
 
+run-persistent:
+	nohup $(PYTHON) telegram_keywords.py  >> $(LOGFILE) 2>&1 & echo \$! > $(PIDFILE)
+
 # Termux targets: create a separate venv and run persistently in background.
 termux-venv:
 	python3 -m venv $(VENV_TERMUX)
