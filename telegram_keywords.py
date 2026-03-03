@@ -1,5 +1,7 @@
 from telethon import TelegramClient, events
 
+import requests
+import json
 import os
 from dotenv import load_dotenv
 
@@ -9,6 +11,8 @@ load_dotenv()
 # credentials must be set in env or in a .env file
 api_id = int(os.getenv("TG_API_ID", "0"))
 api_hash = os.getenv("TG_API_HASH", "")
+slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
+telegram_chat_id = int(os.getenv("TG_CHAT_ID", -1))
 
 if not api_id or not api_hash:
     raise RuntimeError("Telegram API credentials not found; set TG_API_ID and TG_API_HASH in your environment")
@@ -95,9 +99,24 @@ async def main():
         lines.append(text)
 
         alert = "\n".join(lines)
-        peer = await client.get_input_entity(-1003839416460)
-        
+        await execute_telegram_message(alert)
+        execute_slack_message(alert)
+
+    async def execute_telegram_message(alert):
+        peer = await client.get_input_entity(telegram_chat_id)
         await client.send_message(peer, alert)
+
+    def execute_slack_message(alert):
+        payload = {"text": alert}
+
+        resp = requests.post(
+            slack_webhook_url,
+            data=json.dumps(payload),
+            headers={"Content-Type": "application/json"},
+            timeout=10,
+        )
+
+        resp.raise_for_status()
 
     await client.run_until_disconnected()
 
