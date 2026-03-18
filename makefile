@@ -27,7 +27,7 @@ run: install
 	$(PYTHON) telegram_keywords.py
 
 run-persistent:
-	nohup $(PYTHON) telegram_keywords.py  >> $(LOGFILE) 2>&1 & echo \$! > $(PIDFILE)
+	nohup $(PYTHON) telegram_keywords.py >> $(LOGFILE) 2>&1 & echo $$! > $(PIDFILE)
 
 run-qrcode: install
 	$(PYTHON) qrcode.py

@@ -209,4 +209,7 @@ __marimo__/
 telegramkeywords.session
 telegram_keywords.termux.*
 
+telegram_keywords.pid
+telegramkeywords.session-journal
+
 /activate
