@@ -1,5 +1,5 @@
 
-.PHONY: help venv install run clean
+.PHONY: help venv install run run-persistent run-qrcode stop clean
 
 VENV?=.venv
 PYTHON=$(VENV)/bin/python
@@ -10,10 +10,13 @@ LOGFILE?=telegram_keywords.log
 help:
 	@echo "Usage: make [target]"
 	@echo "Targets:"
-	@echo "  venv     Create a virtualenv at $(VENV)"
-	@echo "  install  Install requirements from requirements.txt into $(VENV)"
-	@echo "  run      Run telegram_keywords.py using the venv python"
-	@echo "  clean    Remove the virtualenv"
+	@echo "  venv            Create a virtualenv at $(VENV)"
+	@echo "  install         Install requirements from requirements.txt"
+	@echo "  run             Run telegram_keywords.py"
+	@echo "  run-persistent  Run telegram_keywords.py in background (log: $(LOGFILE))"
+	@echo "  run-qrcode      Run qrcode.py"
+	@echo "  stop            Stop background process"
+	@echo "  clean           Remove the virtualenv"
 
 venv:
 	python3 -m venv --copies $(VENV)
@@ -31,6 +34,9 @@ run-persistent:
 
 run-qrcode: install
 	$(PYTHON) qrcode.py
+
+stop:
+	kill $$(cat $(PIDFILE))
 
 clean:
 	rm -rf $(VENV)
