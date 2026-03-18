@@ -79,7 +79,7 @@ async def main():
         sender_name = (
             getattr(sender, "username", None)
             or getattr(sender, "first_name", None)
-            or ""
+            or f"id:{event.sender_id}"
         )
 
         link = ""
