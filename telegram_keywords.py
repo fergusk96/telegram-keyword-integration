@@ -87,12 +87,17 @@ async def main():
         if cid.startswith("-100"):
             link = f"https://t.me/c/{cid[4:]}/{event.id}"
 
+        fwd = event.message.fwd_from
+        fwd_from_name = getattr(fwd, "from_name", None) if fwd else None
+
         # Build the message without any "\n" inside {...} expressions
         lines = [
             f"Keyword hit: {', '.join(hits)}",
             f"Chat: {chat_name}",
             f"From: {sender_name}",
         ]
+        if fwd:
+            lines.append(f"Forwarded from: {fwd_from_name or 'unknown'}")
         if link:
             lines.append(f"Link: {link}")
         lines.append("Message:")
