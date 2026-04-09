@@ -88,7 +88,19 @@ async def main():
             link = f"https://t.me/c/{cid[4:]}/{event.id}"
 
         fwd = event.message.fwd_from
-        fwd_from_name = getattr(fwd, "from_name", None) if fwd else None
+        fwd_from_name = None
+        if fwd:
+            fwd_from_name = getattr(fwd, "from_name", None)
+            if not fwd_from_name and getattr(fwd, "from_id", None):
+                try:
+                    fwd_entity = await client.get_entity(fwd.from_id)
+                    fwd_from_name = (
+                        getattr(fwd_entity, "username", None)
+                        or getattr(fwd_entity, "first_name", None)
+                        or getattr(fwd_entity, "title", None)
+                    )
+                except Exception:
+                    pass
 
         # Build the message without any "\n" inside {...} expressions
         lines = [
