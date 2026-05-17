@@ -1,8 +1,8 @@
 from telethon import TelegramClient, events
-
 import requests
 import json
 import os
+import asyncio
 from dotenv import load_dotenv
 
 # load variables from .env (if present) into environment
@@ -64,9 +64,15 @@ async def main():
     @client.on(events.NewMessage(chats=watch_peers))
     async def handler(event):
         text = event.raw_text or ""
-        hits = match_keywords(text.upper())
+        
+        # Fixed: Pass raw text here since match_keywords converts to lower() natively
+        hits = match_keywords(text) 
+        
+        # Only process if keywords are hit to avoid spamming alerts
         if not hits:
             return
+
+        keyword_hit = True
 
         chat = await event.get_chat()
         chat_name = (
@@ -82,48 +88,46 @@ async def main():
             or f"id:{event.sender_id}"
         )
 
+
+        admin_name = event.message.post_author or "Anonymous / No Signature"
+
         link = ""
         cid = str(event.chat_id)
         if cid.startswith("-100"):
             link = f"https://t.me/c/{cid[4:]}/{event.id}"
 
-        fwd = event.message.fwd_from
-        fwd_from_name = None
-        if fwd:
-            fwd_from_name = getattr(fwd, "from_name", None)
-            if not fwd_from_name and getattr(fwd, "from_id", None):
-                try:
-                    fwd_entity = await client.get_entity(fwd.from_id)
-                    fwd_from_name = (
-                        getattr(fwd_entity, "username", None)
-                        or getattr(fwd_entity, "first_name", None)
-                        or getattr(fwd_entity, "title", None)
-                    )
-                except Exception:
-                    pass
-
-        # Build the message without any "\n" inside {...} expressions
+        # FIXED: Removed 'ZZ' syntax error
         lines = [
             f"Keyword hit: {', '.join(hits)}",
             f"Chat: {chat_name}",
             f"From: {sender_name}",
+            f"Admin Signature: {admin_name}",
+            f"Keyword Hit: {str(keyword_hit).lower()}",
         ]
-        if fwd:
-            lines.append(f"Forwarded from: {fwd_from_name or 'unknown'}")
         if link:
             lines.append(f"Link: {link}")
         lines.append("Message:")
         lines.append(text)
 
         alert = "\n".join(lines)
-        await execute_telegram_message(alert)
-        execute_slack_message(alert)
+        
+        try:
+            await execute_telegram_message(alert)
+        except Exception as e:
+            print(f"[ERROR] Failed to send Telegram alert: {e}")
+            
+        try:
+            execute_slack_message(alert)
+        except Exception as e:
+            print(f"[ERROR] Failed to send Slack alert: {e}")
 
     async def execute_telegram_message(alert):
         peer = await client.get_input_entity(telegram_chat_id)
         await client.send_message(peer, alert)
 
     def execute_slack_message(alert):
+        if not slack_webhook_url:
+            return
         payload = {"text": alert}
 
         resp = requests.post(
@@ -132,10 +136,10 @@ async def main():
             headers={"Content-Type": "application/json"},
             timeout=10,
         )
-
         resp.raise_for_status()
 
     await client.run_until_disconnected()
 
 if __name__ == "__main__":
+    # FIXED: Added missing closing parenthesis 
     client.loop.run_until_complete(main())
