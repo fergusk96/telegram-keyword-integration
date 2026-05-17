@@ -67,12 +67,13 @@ async def main():
         
         # Fixed: Pass raw text here since match_keywords converts to lower() natively
         hits = match_keywords(text) 
+
+        keyword_hit = False
         
         # Only process if keywords are hit to avoid spamming alerts
-        if not hits:
-            return
+        if hits:
+            keyword_hit = True
 
-        keyword_hit = True
 
         chat = await event.get_chat()
         chat_name = (
